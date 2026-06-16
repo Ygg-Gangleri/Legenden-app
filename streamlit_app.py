@@ -43,6 +43,14 @@ st.markdown(
     p, label, div {
         color: #000000 !important;
     }
+    .stSelectbox > div > div {
+        border: 2px solid #ff69b4 !important;
+        border-radius: 8px;
+        background-color: white !important;
+    }
+    .stSelectbox {
+        color: #000000 !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,
