@@ -9,11 +9,11 @@ st.markdown(
     """
     <style>
     body {
-        background-color: #ffe4ec;
+        background-color: #f3e2c7;
         color: #000000;
     }
     .stApp, .main, .block-container {
-        background-color: #ffe4ec;
+        background-color: #f3e2c7;
         color: #000000;
     }
     .css-18e3th9 h1, .css-10trblm, .css-1d391kg {
@@ -66,37 +66,67 @@ st.markdown(
 
 st.markdown("# Isotopen Rayleigh Fraktionierung")
 
-st.markdown(
-    """
-    <div style="
-        background-color: white;
-        border: 3px solid #ff69b4;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 20px 0;
-    ">
-        <h3 style="color: #000000; margin-top: 0;">Was ist Rayleigh-Fraktionierung?</h3>
-        <p style="color: #000000; line-height: 1.6;">
-        Die Rayleigh-Isotopenfraktionierung beschreibt, wie sich die isotopische Zusammensetzung eines Systems verändert, wenn Stoff kontinuierlich entfernt wird.
-        </p>
-        <p style="color: #000000; line-height: 1.6;">
-        Dabei gilt: Leichtere Isotope werden bevorzugt in die entweichende oder ausgefällte Phase überführt, während das verbleibende Reservoir zunehmend an schweren Isotopen angereichert wird.
-        </p>
-        <p style="color: #000000; line-height: 1.6;">
-        <strong>Ein typisches Beispiel ist die Verdunstung von Wasser:</strong><br>
-        Während Wasser verdunstet, gehen bevorzugt Moleküle mit dem leichten Isotop (<sup>16</sup>O) in die Gasphase über. Das verbleibende Wasser wird dadurch isotopisch schwerer (höhere δ¹⁸O-Werte).
-        </p>
-        <p style="color: #000000; line-height: 1.6;">
-        Dieser Prozess folgt einer exponentiellen Beziehung, der sogenannten Rayleigh-Gleichung, und ist zentral für viele Anwendungen in der Geochemie, Hydrologie und Klimaforschung.
-        </p>
-        <p style="color: #000000; line-height: 1.6; font-weight: bold;">
-        &#128161; Zum Merken!<br>
-        Je mehr Material entfernt wird, desto stärker verändert sich die isotopische Zusammensetzung des verbleibenden Reservoirs.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+with st.expander("Was ist Rayleigh-Fraktionierung?"):
+    st.markdown(
+        """
+        <div style="
+            background: linear-gradient(180deg, #ffe4f0 0%, #ffd1e6 100%) !important;
+            border: 3px solid #ff69b4 !important;
+            border-radius: 16px;
+            padding: 22px;
+            margin: 20px 0;
+            box-shadow: 0 18px 35px rgba(255, 105, 180, 0.18), 0 6px 18px rgba(0, 0, 0, 0.08);
+            transform: perspective(800px) rotateX(2deg);
+            transform-origin: top center;
+        ">
+            <p style="color: #000000; line-height: 1.6;">
+            Die Rayleigh-Fraktionierung ist ein mathematisches Modell, das beschreibt, wie sich die Zusammensetzung eines Systems mit mehreren Phasen ändert, wenn eine Phase kontinuierlich entfernt wird – beispielsweise durch fraktionierte Destillation.
+            </p>
+            <p style="color: #000000; line-height: 1.6;">
+            Besonders relevant ist dieses Prinzip in der Isotopengeochemie, Hydrologie und Meteorologie, wo es die isotopische Differenzierung von Wasser während Kondensationsprozessen erklärt.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with st.expander("Grundlagen"):
+    st.markdown(
+        """
+        <div style="
+            background: linear-gradient(180deg, #ffe4f0 0%, #ffd1e6 100%) !important;
+            border: 3px solid #ff69b4 !important;
+            border-radius: 16px;
+            padding: 22px;
+            margin: 20px 0;
+            box-shadow: 0 18px 35px rgba(255, 105, 180, 0.18), 0 6px 18px rgba(0, 0, 0, 0.08);
+            transform: perspective(800px) rotateX(2deg);
+            transform-origin: top center;
+        ">
+            <ul style="color: #000000; line-height: 1.6; margin-top: 0; padding-left: 18px;">
+                <li>Ein System enthält Moleküle mit unterschiedlichen Isotopen, z. B. <strong>¹⁸O/¹⁶O in Wasser</strong> oder <strong>³⁴S/³²S in Sulfat</strong>.</li>
+                <li>Eine Phase wird selektiv entfernt, z. B. durch Kondensation von Wasserdampf, während die verbleibende Phase ihre isotopische Zusammensetzung ändert.</li>
+                <li>Der Fraktionierungsfaktor <strong>α</strong> beschreibt, wie stark sich die Isotope zwischen den beiden Reservoirs unterscheiden.</li>
+                <li>Bei <strong>α = 1,03</strong> verbleibt das schwerere Isotop (z. B. ¹⁸O) bevorzugt in der flüssigen Phase, während das leichtere Isotop (¹⁶O) bevorzugt verdampft.</li>
+                <li>Der Fraktionierungsfaktor wird als konstant während des Prozesses angenommen.</li>
+            </ul>
+            <p style="color: #000000; line-height: 1.6;">
+            Die Rayleigh-Gleichung beschreibt die exponentielle Änderung der Isotopenverhältnisse in der verbleibenden Phase:
+            </p>
+            <p style="color: #000000; line-height: 1.6; font-weight: bold;">
+            R / R₀ = f<sup>α−1</sup>
+            </p>
+            <p style="color: #000000; line-height: 1.6;">
+            Dabei ist <strong>R</strong> das aktuelle Isotopenverhältnis in der verbleibenden Phase, <strong>R₀</strong> das Anfangsverhältnis, <strong>f</strong> der Anteil der verbleibenden Substanz und <strong>α</strong> der Fraktionierungsfaktor.
+            </p>
+            <p style="color: #000000; line-height: 1.6; font-weight: bold;">
+            &#128161; Zum Merken!<br>
+            Je mehr Material entfernt wird, desto stärker verändert sich die isotopische Zusammensetzung der verbleibenden Phase.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 st.write(
     """
@@ -245,6 +275,18 @@ stations = {
         "- schwankende δ¹⁸O-Werte.\n\n"
         "👉 Flüsse = ‚gemischtes Signal‘."
     ),
+    "Daten-Upload": (
+        "# 📤 7. δ¹⁸O Daten-Upload\n\n"
+        "### Prozess:\n"
+        "Lade eine CSV- oder Excel-Datei mit δ¹⁸O-Werten hoch.\n\n"
+        "### Auswertung:\n"
+        "- Die App erkennt mögliche δ¹⁸O-Spalten.\n"
+        "- Du kannst die X-Achse wählen (Index, Probe oder Datum).\n"
+        "- Ein Diagramm zeigt die Messwerte.\n\n"
+        "### Ergebnis:\n"
+        "- Plott der δ¹⁸O-Werte.\n"
+        "- Statistische Zusammenfassung der Messwerte."
+    ),
 }
 
 selected_station = st.radio("Station wählen", list(stations.keys()), index=0, horizontal=True)
@@ -350,8 +392,124 @@ with col3:
     st.pyplot(fig2)
 with col4:
     st.subheader(selected_station)
-    st.write(stations[selected_station])
-    st.info("Klicke eine Station an, um den erklärenden Text dazu zu sehen.")
+    if selected_station == "Daten-Upload":
+        st.write(stations[selected_station])
+        st.markdown(
+            "Lade eine Datei mit δ¹⁸O-Werten hoch. Erlaubte Formate: CSV, XLSX, XLS."
+        )
+        isotope_file = st.file_uploader(
+            "δ¹⁸O Datei hochladen", type=["csv", "xlsx", "xls"]
+        )
+
+        if isotope_file is not None:
+            try:
+                if isotope_file.name.lower().endswith((".xls", ".xlsx")):
+                    df = pd.read_excel(isotope_file)
+                else:
+                    df = pd.read_csv(isotope_file)
+
+                candidate_columns = [
+                    c
+                    for c in df.columns
+                    if c.lower().replace(" ", "").replace("_", "")
+                    in (
+                        "d18o",
+                        "delta18o",
+                        "delta_18o",
+                        "delta18",
+                        "δ18o",
+                        "d18",
+                    )
+                    and pd.api.types.is_numeric_dtype(df[c])
+                ]
+                if not candidate_columns:
+                    candidate_columns = [
+                        c
+                        for c in df.columns
+                        if any(
+                            key in c.lower()
+                            for key in ["18o", "d18o", "delta", "δ18"]
+                        )
+                        and pd.api.types.is_numeric_dtype(df[c])
+                    ]
+                if not candidate_columns:
+                    candidate_columns = [
+                        c
+                        for c in df.columns
+                        if pd.api.types.is_numeric_dtype(df[c])
+                    ]
+
+                if not candidate_columns:
+                    st.warning(
+                        "In der Datei wurden keine numerischen Spalten gefunden. Bitte lade eine Datei mit δ¹⁸O-Werten hoch."
+                    )
+                else:
+                    delta_col = st.selectbox(
+                        "Wähle die δ¹⁸O-Spalte", candidate_columns, index=0
+                    )
+
+                    axis_columns = [
+                        c
+                        for c in df.columns
+                        if c != delta_col
+                        and (
+                            pd.api.types.is_numeric_dtype(df[c])
+                            or pd.api.types.is_datetime64_any_dtype(df[c])
+                            or df[c].dtype == object
+                        )
+                    ]
+                    x_axis_choice = st.selectbox(
+                        "Wähle X-Achse", ["Index"] + axis_columns, index=0
+                    )
+
+                    if x_axis_choice == "Index":
+                        x_values = np.arange(1, len(df) + 1)
+                        x_label = "Probe"
+                    else:
+                        x_values = df[x_axis_choice]
+                        x_label = x_axis_choice
+
+                    y_values = pd.to_numeric(df[delta_col], errors="coerce")
+                    valid = ~y_values.isna()
+                    y_values = y_values[valid]
+                    x_values = x_values[valid]
+
+                    st.metric("Anzahl auswertbarer Werte", f"{len(y_values)}")
+                    st.write(
+                        {
+                            "Mittelwert (δ¹⁸O)": f"{y_values.mean():.2f} ‰",
+                            "Median (δ¹⁸O)": f"{y_values.median():.2f} ‰",
+                            "Minimum (δ¹⁸O)": f"{y_values.min():.2f} ‰",
+                            "Maximum (δ¹⁸O)": f"{y_values.max():.2f} ‰",
+                        }
+                    )
+
+                    fig_upload, ax_upload = plt.subplots(figsize=(6, 4))
+                    ax_upload.plot(x_values, y_values, marker="o", color="#1f77b4", linewidth=2)
+                    ax_upload.set_xlabel(x_label, color="black")
+                    ax_upload.set_ylabel("δ¹⁸O (‰)", color="black")
+                    ax_upload.set_title("Hochgeladene δ¹⁸O Werte", color="black")
+                    ax_upload.grid(alpha=0.3)
+                    ax_upload.tick_params(colors="black")
+                    st.pyplot(fig_upload)
+
+                    if x_axis_choice == "Index":
+                        st.caption(
+                            "Die Werte werden gegen die Probennummer aufgetragen."
+                        )
+                    else:
+                        st.caption(
+                            "Die Werte werden gegen die gewählte X-Achse aufgetragen."
+                        )
+            except Exception as e:
+                st.error(f"Fehler beim Einlesen der Datei: {e}")
+        else:
+            st.info(
+                "Lade eine CSV- oder Excel-Datei hoch, die δ¹⁸O-Werte enthält."
+            )
+    else:
+        st.write(stations[selected_station])
+        st.info("Klicke eine Station an, um den erklärenden Text dazu zu sehen.")
 
 st.header("3. Schematische Darstellung: Wolken, Ozean, Land, Berge")
 st.write("Erzeugt eine zweigeteilte Abbildung: oben ein schematisches Panel, unten ein δ¹⁸O vs. Höhe Plot (wie im Referenzbild).")
@@ -386,7 +544,7 @@ vapor_delta = rain_delta + float(vapor_offset)
 
 st.markdown(
     f"""
-    <div style="background-color: white; border: 2px solid #ff69b4; border-radius:8px; padding:12px;">
+    <div style="background-color: #ffe4f0; border: 2px solid #ff69b4; border-radius:8px; padding:12px;">
         <strong style="color:#000000">Default‑Schätzungen (automatisch berechnet)</strong>
         <ul style="color:#000000; margin-top:6px;">
             <li>Regen / Niederschlag: δ¹⁸O ≈ <strong>{rain_delta:.1f} ‰</strong></li>
