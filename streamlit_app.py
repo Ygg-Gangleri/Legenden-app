@@ -4,7 +4,51 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Tirel Isotopen-Rayleigh-Fraktionierung", layout="wide")
 
-st.title("🧪 Tirel Isotopen-Rayleigh-Fraktionierung")
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #ffe4ec;
+        color: #000000;
+    }
+    .stApp, .main, .block-container {
+        background-color: #ffe4ec;
+        color: #000000;
+    }
+    .css-18e3th9 h1, .css-10trblm, .css-1d391kg {
+        color: #000000;
+    }
+    .stTitle, .css-1v0mbdj h1, .css-1tsvksn {
+        color: #000000;
+    }
+    h1 {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 700;
+    }
+    .stMarkdown h1 {
+        color: #000000;
+    }
+    .stSlider label, .stSelectbox label, .stMetric label {
+        color: #000000 !important;
+    }
+    .stMetric {
+        color: #000000 !important;
+    }
+    div[data-testid="metric-container"] {
+        color: #000000 !important;
+    }
+    .metric {
+        color: #000000 !important;
+    }
+    p, label, div {
+        color: #000000 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown("# Tirel Isotopen-Rayleigh-Fraktionierung")
 
 st.write(
     """
@@ -53,11 +97,16 @@ with col1:
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.plot(f, delta, color="#1f77b4", linewidth=2)
     ax.axvline(f_wert, color="#ff7f0e", linestyle="--", label=f"Aktueller Anteil f={f_wert:.2f}")
-    ax.set_xlabel("Verbleibender Anteil f")
-    ax.set_ylabel("δ (‰)")
-    ax.set_title("Rayleigh-Isotopenverlauf")
+    ax.set_xlabel("Verbleibender Anteil f", color="black")
+    ax.set_ylabel("δ (‰)", color="black")
+    ax.set_title("Rayleigh-Isotopenverlauf", color="black")
+    ax.tick_params(colors="black")
     ax.grid(alpha=0.3)
-    ax.legend()
+    legend = ax.legend()
+    for text in legend.get_texts():
+        text.set_color("black")
+    legend.get_frame().set_facecolor("white")
+    legend.get_frame().set_edgecolor("black")
     st.pyplot(fig)
 
 st.markdown(
@@ -178,7 +227,7 @@ for name, (x, y) in positions.items():
         va="center",
         fontsize=9,
         weight="bold",
-        color="white",
+        color="black",
         bbox={
             "boxstyle": "round,pad=0.45",
             "facecolor": color,
@@ -188,7 +237,6 @@ for name, (x, y) in positions.items():
         },
     )
 
-arrow_style = dict(color="#444444", linewidth=2.4, head_width=0.08, length_includes_head=True)
 delta_labels = {
     ("Verdunstung", "Kondensation"): "δ¹⁸O: -5‰ → -8‰",
     ("Kondensation", "Niederschlag"): "δ¹⁸O: -8‰ → -10‰",
@@ -205,16 +253,44 @@ paths = [
     ("Versickerung", "Grundwasser"),
     ("Grundwasser", "Verdunstung"),
 ]
+curve_rads = {
+    ("Grundwasser", "Verdunstung"): 0.3,
+    ("Abfluss / Sammlung", "Versickerung"): -0.2,
+    ("Verdunstung", "Kondensation"): 0.0,
+    ("Kondensation", "Niederschlag"): 0.0,
+    ("Niederschlag", "Abfluss / Sammlung"): 0.0,
+    ("Versickerung", "Grundwasser"): 0.0,
+}
+box_radius = 0.25
 for src, dst in paths:
     x0, y0 = positions[src]
     x1, y1 = positions[dst]
+    rad = curve_rads.get((src, dst), 0.0)
+
     dx = x1 - x0
     dy = y1 - y0
-    start_x = x0 * 0.9
-    start_y = y0 * 0.9
-    ax2.arrow(start_x, start_y, dx * 0.55, dy * 0.55, **arrow_style)
-    mid_x = start_x + dx * 0.35
-    mid_y = start_y + dy * 0.35
+    dist = np.hypot(dx, dy)
+    start_x = x0 + (dx / dist) * box_radius
+    start_y = y0 + (dy / dist) * box_radius
+    end_x = x1 - (dx / dist) * box_radius
+    end_y = y1 - (dy / dist) * box_radius
+
+    ax2.annotate(
+        "",
+        xy=(end_x, end_y),
+        xytext=(start_x, start_y),
+        arrowprops={
+            "arrowstyle": "-|>",
+            "color": "#444444",
+            "linewidth": 2.4,
+            "shrinkA": 0,
+            "shrinkB": 0,
+            "mutation_scale": 20,
+            "connectionstyle": f"arc3,rad={rad}",
+        },
+    )
+    mid_x = start_x + (end_x - start_x) * 0.5
+    mid_y = start_y + (end_y - start_y) * 0.5
     label = delta_labels.get((src, dst), "")
     if label:
         ax2.text(mid_x, mid_y, label, ha="center", va="center", fontsize=8, color="#333333", bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "alpha": 0.8, "edgecolor": "none"})
