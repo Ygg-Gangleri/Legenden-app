@@ -1,8 +1,9 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
-st.set_page_config(page_title="Tirel Isotopen-Rayleigh-Fraktionierung", layout="wide")
+st.set_page_config(page_title="Isotopen Rayleigh Fraktionierung", layout="wide")
 
 st.markdown(
     """
@@ -47,8 +48,15 @@ st.markdown(
         border: 2px solid #ff69b4 !important;
         border-radius: 8px;
         background-color: white !important;
+        color: #000000 !important;
     }
-    .stSelectbox {
+    /* Ensure dropdown and option items are white with black text */
+    .stSelectbox,
+    .stSelectbox select,
+    .stSelectbox div[role="listbox"],
+    .stSelectbox .css-1hwfws3,
+    .stSelectbox .css-1hwfws3 div[role="option"] {
+        background-color: white !important;
         color: #000000 !important;
     }
     </style>
@@ -56,7 +64,39 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown("# Tirel Isotopen-Rayleigh-Fraktionierung")
+st.markdown("# Isotopen Rayleigh Fraktionierung")
+
+st.markdown(
+    """
+    <div style="
+        background-color: white;
+        border: 3px solid #ff69b4;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+    ">
+        <h3 style="color: #000000; margin-top: 0;">Was ist Rayleigh-Fraktionierung?</h3>
+        <p style="color: #000000; line-height: 1.6;">
+        Die Rayleigh-Isotopenfraktionierung beschreibt, wie sich die isotopische Zusammensetzung eines Systems verändert, wenn Stoff kontinuierlich entfernt wird.
+        </p>
+        <p style="color: #000000; line-height: 1.6;">
+        Dabei gilt: Leichtere Isotope werden bevorzugt in die entweichende oder ausgefällte Phase überführt, während das verbleibende Reservoir zunehmend an schweren Isotopen angereichert wird.
+        </p>
+        <p style="color: #000000; line-height: 1.6;">
+        <strong>Ein typisches Beispiel ist die Verdunstung von Wasser:</strong><br>
+        Während Wasser verdunstet, gehen bevorzugt Moleküle mit dem leichten Isotop (<sup>16</sup>O) in die Gasphase über. Das verbleibende Wasser wird dadurch isotopisch schwerer (höhere δ¹⁸O-Werte).
+        </p>
+        <p style="color: #000000; line-height: 1.6;">
+        Dieser Prozess folgt einer exponentiellen Beziehung, der sogenannten Rayleigh-Gleichung, und ist zentral für viele Anwendungen in der Geochemie, Hydrologie und Klimaforschung.
+        </p>
+        <p style="color: #000000; line-height: 1.6; font-weight: bold;">
+        &#128161; Zum Merken!<br>
+        Je mehr Material entfernt wird, desto stärker verändert sich die isotopische Zusammensetzung des verbleibenden Reservoirs.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.write(
     """
@@ -313,8 +353,198 @@ with col4:
     st.write(stations[selected_station])
     st.info("Klicke eine Station an, um den erklärenden Text dazu zu sehen.")
 
-st.write("---")
-st.write(
-    "Nutze diese App, um die Dynamik von δ-Werten im Tirel-Rayleigh-Modell zu verstehen. "
-    "Verändere die Stellschrauben und beobachte, wie sich der Verlauf und die Stationen verhalten."
+st.header("3. Schematische Darstellung: Wolken, Ozean, Land, Berge")
+st.write("Erzeugt eine zweigeteilte Abbildung: oben ein schematisches Panel, unten ein δ¹⁸O vs. Höhe Plot (wie im Referenzbild).")
+
+# GNIP data upload (optional)
+st.markdown("**GNIP-Daten (optional):** Lade eine CSV aus der GNIP‑Datenbank hoch, um Niederschlags‑δ¹⁸O Werte zu verwenden.")
+gnip_file = st.file_uploader("GNIP CSV hochladen (optional)", type=["csv"])  
+
+# compute representative δ values: default from slider `delta0`, can be replaced by uploaded GNIP data
+if gnip_file is not None:
+    try:
+        df = pd.read_csv(gnip_file)
+        possible = [c for c in df.columns if c.lower() in ("d18o", "delta18o", "delta_18o", "d18oxy", "value", "d18")]
+        if not possible:
+            possible = [c for c in df.columns if any(s in c.lower() for s in ("18", "d")) and pd.api.types.is_numeric_dtype(df[c])]
+        if possible:
+            col = possible[0]
+            rain_delta = float(df[col].dropna().astype(float).mean())
+            sample_n = int(df[col].dropna().shape[0])
+            st.success(f"GNIP-Daten gelesen — Mittelwert von '{col}': {rain_delta:.2f} ‰ (n={sample_n})")
+        else:
+            rain_delta = float(delta0)
+            st.warning("Keine geeignete δ¹⁸O-Spalte in der CSV gefunden — verwende den gewählten Startwert.")
+    except Exception as e:
+        rain_delta = float(delta0)
+        st.error(f"Fehler beim Einlesen der GNIP‑Datei: {e}")
+else:
+    rain_delta = float(delta0)
+
+vapor_offset = st.slider("Angenommene Differenz: Dampf = Regen + offset (‰)", -1.0, 6.0, 3.0, step=0.1)
+vapor_delta = rain_delta + float(vapor_offset)
+
+st.markdown(
+    f"""
+    <div style="background-color: white; border: 2px solid #ff69b4; border-radius:8px; padding:12px;">
+        <strong style="color:#000000">Default‑Schätzungen (automatisch berechnet)</strong>
+        <ul style="color:#000000; margin-top:6px;">
+            <li>Regen / Niederschlag: δ¹⁸O ≈ <strong>{rain_delta:.1f} ‰</strong></li>
+            <li>Wasserdampf / Wolken: δ¹⁸O ≈ <strong>{vapor_delta:.1f} ‰</strong></li>
+        </ul>
+        <small style="color:#333333">Hinweis: Vereinfachte Visualisierung; GNIP oder fraktionierende Modelle liefern genauere Werte.</small>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
+
+# Prepare reservoir labels (keep simple)
+reservoirs = {
+    "Ozean": {"delta": "~0 ‰", "text": "Ozean (Referenz)."},
+    "Wolken": {"delta": f"~ {vapor_delta:.1f} ‰", "text": "Wolken / Wasserdampf."},
+    "Landoberfläche": {"delta": f"~ {rain_delta:.1f} ‰", "text": "Oberflächenwasser."},
+    "Gletscher / Berge": {"delta": "~ -15 ‰", "text": "Hohe Lagen: sehr negative δ¹⁸O-Werte."},
+}
+
+selected_res = st.radio("Reservoir wählen", list(reservoirs.keys()), index=0)
+
+# Create two-panel figure: A = schematic, B = δ vs altitude
+fig, (axA, axB) = plt.subplots(2, 1, figsize=(8, 10), gridspec_kw={"height_ratios": [2, 1]})
+
+# --- Panel A: schematic ---
+axA.axis("off")
+axA.set_xlim(0, 100)
+axA.set_ylim(0, 60)
+
+# Ocean
+ocean_w = 28
+ocean_h = 14
+ocean = plt.Rectangle((2, 2), ocean_w, ocean_h, facecolor="#4da6ff", edgecolor="k")
+axA.add_patch(ocean)
+axA.text(6, 9, f"Ozean\n{reservoirs['Ozean']['delta']}", color="white", weight="bold")
+
+# Continent / land
+land = plt.Rectangle((ocean_w + 6, 2), 34, 28, facecolor="#eaf7de", edgecolor="k")
+axA.add_patch(land)
+
+# Mountains (stylized)
+mx0 = ocean_w + 14
+mount_coords = [[mx0, 10], [mx0 + 12, 40], [mx0 + 24, 10], [mx0 + 36, 38], [mx0 + 50, 10]]
+mountain = plt.Polygon(mount_coords, closed=True, facecolor="#bdbdbd", edgecolor="k")
+axA.add_patch(mountain)
+axA.text(mx0 + 30, 46, f"Gletscher / Berge\n{reservoirs['Gletscher / Berge']['delta']}", ha="center", weight="bold")
+
+# Clouds (three, over ocean, land, mountains)
+cloud_centers = [(12, 46), (40, 52), (70, 50)]
+cloud_colors = ["#ffffff"] * 3
+cloud_deltas = [vapor_delta + 1.0, vapor_delta, vapor_delta - 1.2]
+for (cx, cy), dv in zip(cloud_centers, cloud_deltas):
+    axA.add_patch(plt.Circle((cx - 3, cy), 4.0, facecolor="#f7f7f7", edgecolor="#666666"))
+    axA.add_patch(plt.Circle((cx + 1, cy + 1.5), 5.0, facecolor="#f7f7f7", edgecolor="#666666"))
+    axA.add_patch(plt.Circle((cx + 6, cy), 4.0, facecolor="#f7f7f7", edgecolor="#666666"))
+    axA.text(cx + 1, cy + 7, f"δ¹⁸O: {dv:.1f} ‰", ha="center", weight="bold")
+
+# Long arrows: evaporation (ocean -> clouds)
+axA.annotate('', xy=(12, 42), xytext=(ocean_w + 1, ocean_h + 2), arrowprops=dict(arrowstyle='-|>', lw=2.4, color='#2b6ea3'))
+axA.text(22, 34, 'Verdunstung', color='#2b6ea3')
+
+# Condensation / precipitation arrows (clouds -> mountains / land)
+axA.annotate('', xy=(mx0 + 18, 36), xytext=(40, 48), arrowprops=dict(arrowstyle='-|>', lw=2.4, color='#a33'))
+axA.text(48, 44, 'Kondensation / Niederschlag', color='#a33')
+
+# River / runoff from mountains to ocean
+river_x = [mx0 + 40, mx0 + 18, ocean_w + 10]
+river_y = [18, 14, 8]
+axA.plot(river_x, river_y, color='#1f77b4', lw=2.5)
+axA.text(mx0 + 28, 20, 'Abfluss', color='#003366')
+
+# Colored markers along mountain slope (altitude points)
+altitudes = [0, 1000, 2000, 3000, 4000, 5000]
+# compute a decreasing δ profile from near sea level to high altitudes
+delta_low = rain_delta
+delta_high = -15.0
+delta_profile = np.linspace(delta_low, delta_high, len(altitudes))
+colors = ['#d62728', '#ff7f0e', '#ffbf00', '#2ca02c', '#98df8a', '#17becf']
+mount_x_positions = [mx0 + 8, mx0 + 14, mx0 + 20, mx0 + 28, mx0 + 36, mx0 + 46]
+mount_y_positions = [14, 18, 22, 28, 32, 36]
+for x, y, dp, c in zip(mount_x_positions, mount_y_positions, delta_profile, colors):
+    axA.scatter(x, y, s=120, color=c, edgecolor='k', zorder=5)
+    axA.text(x + 3, y - 2, f"{dp:.1f} ‰", color='k')
+
+# --- Panel B: δ vs Altitude ---
+axB.set_xlabel('Altitude (m)')
+axB.set_ylabel('δ¹⁸O (‰)')
+axB.set_xlim(0, 5200)
+axB.set_ylim(min(delta_profile) - 2, max(delta_profile) + 2)
+axB.invert_yaxis()  # optional: show more negative downwards similar to many isotope plots
+axB.plot(altitudes, delta_profile, color='#d95f02', lw=2)
+for a, d, c in zip(altitudes, delta_profile, colors):
+    axB.scatter(a, d, s=110, color=c, edgecolor='k')
+    axB.text(a + 60, d, f"{d:.1f} ‰", va='center')
+axB.set_title('δ¹⁸O vs. Altitude', weight='bold')
+axB.grid(alpha=0.3)
+
+st.pyplot(fig)
+
+with st.expander('Details zum ausgewählten Reservoir'):
+    st.subheader(selected_res)
+    st.write(reservoirs[selected_res]['text'])
+
+st.write('---')
+st.write('Nutze diese Ansicht, um das Prinzip: Verdunstung → Kondensation → Niederschlag und Höhenabhängigkeit von δ¹⁸O zu veranschaulichen.')
+
+st.header("4. Referenzabbildung: Schematische Nachbildung")
+st.write("Nachbildung des hochgeladenen Referenzbilds: links ein schematisches Panel, rechts ein δ¹⁸O‑vs‑Höhe‑Diagramm.")
+
+# Build reference-style figure similar to the uploaded image
+fig4, (axL, axR) = plt.subplots(1, 2, figsize=(12, 5), gridspec_kw={"width_ratios": [1.2, 1]})
+
+# Left: schematic (axL)
+axL.axis('off')
+axL.set_xlim(0, 100)
+axL.set_ylim(0, 40)
+
+# Ocean block
+axL.add_patch(plt.Rectangle((0, 0), 24, 10, facecolor="#4da6ff", edgecolor='k'))
+axL.text(4, 5, 'Ozean', color='white', weight='bold')
+
+# Small evaporation arrows from ocean to left cloud
+axL.annotate('', xy=(12, 24), xytext=(12, 12), arrowprops=dict(arrowstyle='-|>', color='#2b6ea3', lw=2))
+axL.text(12, 21, 'Verdunstung', ha='center', color='#2b6ea3')
+
+# Clouds
+clouds = [(12, 28), (44, 32), (78, 34)]
+cloud_labels = [f"δ¹⁸O: {vapor_delta + 1.0:.1f} ‰", f"δ¹⁸O: {vapor_delta:.1f} ‰", f"δ¹⁸O: {vapor_delta - 1.2:.1f} ‰"]
+for (cx, cy), lab in zip(clouds, cloud_labels):
+    axL.add_patch(plt.Circle((cx - 3, cy), 3.2, facecolor='#ffffff', edgecolor='#666666'))
+    axL.add_patch(plt.Circle((cx, cy + 1.2), 3.8, facecolor='#ffffff', edgecolor='#666666'))
+    axL.add_patch(plt.Circle((cx + 3, cy), 3.2, facecolor='#ffffff', edgecolor='#666666'))
+    axL.text(cx + 1, cy + 5, lab, ha='center', weight='bold')
+
+# Mountain slope with colored points
+alts_ref = np.array([0, 1000, 2000, 3000, 4000])
+d_ref = np.linspace(rain_delta, -14.0, alts_ref.size)
+xs_ref = np.linspace(46, 92, alts_ref.size)
+ys_ref = 6 + (alts_ref / 5000.0) * 28
+colmap = plt.cm.viridis(np.linspace(0, 1, alts_ref.size))
+for x, y, dv, cc in zip(xs_ref, ys_ref, d_ref, colmap):
+    axL.scatter(x, y, s=140, color=cc, edgecolor='k')
+    axL.text(x + 2, y - 1, f"{dv:.1f} ‰", color='k')
+
+axL.text(4, 38, 'A', weight='bold')
+
+# Right: δ vs altitude (axR) like panel B
+axR.set_xlim(min(d_ref) - 2, max(d_ref) + 2)
+axR.set_ylim(0, 5200)
+axR.invert_yaxis()
+axR.set_xlabel('δ¹⁸O (‰)')
+axR.set_ylabel('Altitude (m)')
+axR.set_title('δ¹⁸O vs. Höhe')
+axR.plot(d_ref, alts_ref, color='#d62728', lw=2)
+for dv, alt, cc in zip(d_ref, alts_ref, colmap):
+    axR.scatter(dv, alt, color=cc, s=140, edgecolor='k')
+    axR.text(dv + 0.4, alt, f"{dv:.1f} ‰", va='center')
+
+axR.text(min(d_ref) - 1, -200, 'B', weight='bold')
+
+st.pyplot(fig4)
