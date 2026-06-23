@@ -5,6 +5,54 @@ import pandas as pd
 
 st.set_page_config(page_title="Isotopen Rayleigh Fraktionierung", layout="wide")
 
+# App nur auf Deutsch
+st.session_state.language = "DE"
+
+# Übersetzungen für DE/EN (kurz gehalten)
+TRANSLATIONS = {
+    "DE": {
+        "title": "Isotopen Rayleigh Fraktionierung",
+        "welcome_html": """
+        <div style=\"background: linear-gradient(180deg, #fff0f6 0%, #ffe4f0 100%) !important; border: 3px solid #ff69b4 !important; border-radius: 16px; padding: 22px; margin: 20px 0; box-shadow: 0 18px 35px rgba(255, 105, 180, 0.15), 0 6px 18px rgba(0, 0, 0, 0.08);\">
+            <p style=\"color: #000000; line-height: 1.8; font-size: 16px;\">🌍 <strong>Willkommen!</strong> Diese App visualisiert die <strong>Rayleigh-Isotopenfraktionierung</strong> anhand realer Niederschlagsdaten des <strong>Global Network of Isotopes in Precipitation (GNIP)</strong> der IAEA.</p>
+            <p style=\"color: #000000; line-height: 1.8;\">Experimentiere interaktiv mit dem Modell: Stelle den Ausgangswert, den Fraktionierungsfaktor und den verbliebenen Anteil ein und beobachte in Echtzeit, wie sich die Isotopenzusammensetzung verändert.</p>
+            <p style=\"color: #000000; line-height: 1.8;\">Visualisiere den komplexen Wasserkreislauf mit unserem interaktiven Diagramm und verstehe, warum Niederschlag in verschiedenen Klimazonen unterschiedliche isotopische Signaturen hat – ein Schlüssel zur Wassermarkierung in der modernen Hydrologie und Klimatologie.</p>
+        </div>
+        """,
+        "expander1_title": "Was ist Rayleigh-Fraktionierung?",
+        "expander1_html": None,
+        "expander2_title": "Grundlagen",
+        "header1": "1. Rayleigh-Verlauf",
+        "select_gnip": "Beispiel aus GNIP-Niederschlagdaten wählen",
+        "slider_delta0": "Anfangswert δ₀ (‰)",
+        "slider_alpha": "Fraktionierungsfaktor α",
+        "slider_f": "Verbleibender Anteil f",
+        "metric_current_delta": "Aktueller δ-Wert",
+    },
+    "EN": {
+        "title": "Isotope Rayleigh Fractionation",
+        "welcome_html": """
+        <div style=\"background: linear-gradient(180deg, #fff0f6 0%, #ffe4f0 100%) !important; border: 3px solid #ff69b4 !important; border-radius: 16px; padding: 22px; margin: 20px 0; box-shadow: 0 18px 35px rgba(255, 105, 180, 0.15), 0 6px 18px rgba(0, 0, 0, 0.08);\">
+            <p style=\"color: #000000; line-height: 1.8; font-size: 16px;\">🌍 <strong>Welcome!</strong> This app visualizes <strong>Rayleigh isotope fractionation</strong> using precipitation data from the <strong>Global Network of Isotopes in Precipitation (GNIP)</strong> by the IAEA.</p>
+            <p style=\"color: #000000; line-height: 1.8;\">Interactively change the initial value, fractionation factor and remaining fraction to see how isotope composition evolves in real time.</p>
+            <p style=\"color: #000000; line-height: 1.8;\">Visualize the water cycle and understand why precipitation shows different isotopic signatures across climates — a key for hydrology and climate studies.</p>
+        </div>
+        """,
+        "expander1_title": "What is Rayleigh fractionation?",
+        "expander1_html": None,
+        "expander2_title": "Basics",
+        "header1": "1. Rayleigh curve",
+        "select_gnip": "Choose GNIP precipitation example",
+        "slider_delta0": "Initial δ₀ (‰)",
+        "slider_alpha": "Fractionation factor α",
+        "slider_f": "Remaining fraction f",
+        "metric_current_delta": "Current δ value",
+    },
+}
+
+# Shortcut to current language map
+T = TRANSLATIONS.get(st.session_state.language, TRANSLATIONS["DE"])
+
 st.markdown(
     """
     <style>
@@ -64,7 +112,22 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown("# Isotopen Rayleigh Fraktionierung")
+
+# Titel links, große weiße Sprach-Buttons rechts (DE oben, GB unten)
+col_title, col_lang = st.columns([9, 1])
+with col_title:
+    st.markdown(f'<h1 style="text-decoration: underline; margin: 0;">{T["title"]}</h1>', unsafe_allow_html=True)
+with col_lang:
+    # Große, weiße Box mit zwei Links, die über URL-Parameter die Sprache setzen
+    # Buttons setzen Session-State direkt (kein URL-Reload nötig)
+    st.markdown('<div style="background: white; padding: 6px; border-radius: 8px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.06);">', unsafe_allow_html=True)
+    if st.button("DE  🇩🇪", key="btn_de_lang", use_container_width=True):
+        st.session_state.language = "DE"
+    if st.button("GB  🇬🇧", key="btn_en_lang", use_container_width=True):
+        st.session_state.language = "EN"
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown(T["welcome_html"], unsafe_allow_html=True)
 
 with st.expander("Was ist Rayleigh-Fraktionierung?"):
     st.markdown(
@@ -110,15 +173,31 @@ with st.expander("Grundlagen"):
                 <li>Bei <strong>α = 1,03</strong> verbleibt das schwerere Isotop (z. B. ¹⁸O) bevorzugt in der flüssigen Phase, während das leichtere Isotop (¹⁶O) bevorzugt verdampft.</li>
                 <li>Der Fraktionierungsfaktor wird als konstant während des Prozesses angenommen.</li>
             </ul>
-            <p style="color: #000000; line-height: 1.6;">
-            Die Rayleigh-Gleichung beschreibt die exponentielle Änderung der Isotopenverhältnisse in der verbleibenden Phase:
-            </p>
             <p style="color: #000000; line-height: 1.6; font-weight: bold;">
-            R / R₀ = f<sup>α−1</sup>
+            # Unterstrichener Titel (Deutsch)
             </p>
             <p style="color: #000000; line-height: 1.6;">
             Dabei ist <strong>R</strong> das aktuelle Isotopenverhältnis in der verbleibenden Phase, <strong>R₀</strong> das Anfangsverhältnis, <strong>f</strong> der Anteil der verbleibenden Substanz und <strong>α</strong> der Fraktionierungsfaktor.
             </p>
+            <p style="color: #000000; line-height: 1.6; font-weight: bold;">
+            Mathematische Berechnung:
+            </p>
+            <ul style="color: #000000; line-height: 1.6; margin-top: 8px;">
+                <li><strong>Schritt 1:</strong> Berechne den Exponenten: <strong>α − 1</strong></li>
+                <li><strong>Schritt 2:</strong> Erhebe <strong>f</strong> (den verbleibenden Anteil) zur Potenz (α − 1): <strong>f<sup>α−1</sup></strong></li>
+                <li><strong>Schritt 3:</strong> Multipliziere mit dem Anfangsverhältnis: <strong>R = R₀ × f<sup>α−1</sup></strong></li>
+            </ul>
+            <p style="color: #000000; line-height: 1.6; font-weight: bold;">
+            Beispiel Berechnung:
+            </p>
+            <p style="color: #000000; line-height: 1.6;">
+            Mit R₀ = 0,002 (Anfangswert), α = 1,005 und f = 0,5 (50% verbleibend):
+            </p>
+            <ul style="color: #000000; line-height: 1.6; margin-top: 8px;">
+                <li>α − 1 = 1,005 − 1 = 0,005</li>
+                <li>f<sup>α−1</sup> = 0,5<sup>0,005</sup> ≈ 0,9965</li>
+                <li>R = 0,002 × 0,9965 ≈ 0,001993</li>
+            </ul>
             <p style="color: #000000; line-height: 1.6; font-weight: bold;">
             &#128161; Zum Merken!<br>
             Je mehr Material entfernt wird, desto stärker verändert sich die isotopische Zusammensetzung der verbleibenden Phase.
@@ -128,13 +207,7 @@ with st.expander("Grundlagen"):
         unsafe_allow_html=True,
     )
 
-st.write(
-    """
-    Diese App zeigt die Rayleigh-Isotopenfraktionierung nach dem Tirel-Modell.
-    Stelle den Ausgangswert, den Fraktionierungsfaktor und den verbliebenen Anteil ein.
-    Anschließend siehst du den isotopengeführten Verlauf und ein interaktives Kreislaufdiagramm.
-    """
-)
+
 
 st.header("1. Rayleigh-Verlauf")
 
@@ -172,12 +245,13 @@ with col1:
     f = np.linspace(0.01, 1.0, 200)
     delta = (delta0 + 1000) * f ** (alpha - 1) - 1000
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=(5, 3))
     ax.plot(f, delta, color="#1f77b4", linewidth=2)
     ax.axvline(f_wert, color="#ff7f0e", linestyle="--", label=f"Aktueller Anteil f={f_wert:.2f}")
     ax.set_xlabel("Verbleibender Anteil f", color="black")
     ax.set_ylabel("δ (‰)", color="black")
     ax.set_title("Rayleigh-Isotopenverlauf", color="black")
+    ax.set_ylim(-40, 10)
     ax.tick_params(colors="black")
     ax.grid(alpha=0.3)
     legend = ax.legend()
@@ -194,7 +268,11 @@ st.markdown(
     "- **Fraktionierungsfaktor α**: Beschreibt, wie stark sich die Isotopenzusammensetzung zwischen Produkt "
     "und Restreservoir unterscheidet. Ein höherer α-Wert bedeutet stärkere fraktionierende Trennung.\n"
     "- **Verbleibender Anteil f**: Der Anteil des Wassers, der nach dem Entfernen eines Teils noch im Reservoir bleibt. "
-    "Wenn f kleiner wird, werden die Isotopenwerte im Restreservoir stärker verändert.\n\n"
+    "Wenn f kleiner wird, werden die Isotopenwerte im Restreservoir stärker verändert.\n"
+    "- **Aktueller δ-Wert**: Zeigt die **isotopische Zusammensetzung der verbleibenden Probe** nach der Rayleigh-Fraktionierung. "
+    "Der Wert wird in **Promille (‰)** angegeben, relativ zum SMOW-Standard. "
+    "**δ < 0 ‰** bedeutet, die Probe ist isotopisch **leicht** (weniger ¹⁸O). **δ > 0 ‰** bedeutet isotopisch **schwer** (mehr ¹⁸O). "
+    "Je stärker die Fraktionierung (niedriger f und höher α), desto größer die Abweichung vom Ausgangswert.\n\n"
     "### Fraktionierung im Wasserkreislauf\n"
     "Fraktionierung tritt überall dort auf, wo Wasserphasenumwandlungen passieren: bei Verdunstung, Kondensation und "
     "Niederschlag. Leichte Isotope (^16O) bevorzugen die Gasphase, schwere Isotope (^18O) bleiben eher in der Flüssigphase. "
@@ -291,7 +369,7 @@ stations = {
 
 selected_station = st.radio("Station wählen", list(stations.keys()), index=0, horizontal=True)
 
-fig2, ax2 = plt.subplots(figsize=(8, 8))
+fig2, ax2 = plt.subplots(figsize=(6, 6))
 ax2.set_xlim(-1.6, 1.6)
 ax2.set_ylim(-1.6, 1.6)
 ax2.axis("off")
