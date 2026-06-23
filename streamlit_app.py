@@ -107,25 +107,22 @@ st.markdown(
         background-color: white !important;
         color: #000000 !important;
     }
+    /* Style expander containers with black border */
+    .streamlit-expanderContent {
+        border: 3px solid black !important;
+        border-radius: 16px;
+    }
+    [data-testid="stExpander"] {
+        border: 3px solid black !important;
+        border-radius: 16px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 
-# Titel links, große weiße Sprach-Buttons rechts (DE oben, GB unten)
-col_title, col_lang = st.columns([9, 1])
-with col_title:
-    st.markdown(f'<h1 style="text-decoration: underline; margin: 0;">{T["title"]}</h1>', unsafe_allow_html=True)
-with col_lang:
-    # Große, weiße Box mit zwei Links, die über URL-Parameter die Sprache setzen
-    # Buttons setzen Session-State direkt (kein URL-Reload nötig)
-    st.markdown('<div style="background: white; padding: 6px; border-radius: 8px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.06);">', unsafe_allow_html=True)
-    if st.button("DE  🇩🇪", key="btn_de_lang", use_container_width=True):
-        st.session_state.language = "DE"
-    if st.button("GB  🇬🇧", key="btn_en_lang", use_container_width=True):
-        st.session_state.language = "EN"
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown(f'<h1 style="text-decoration: underline; margin: 0;">{T["title"]}</h1>', unsafe_allow_html=True)
 
 st.markdown(T["welcome_html"], unsafe_allow_html=True)
 
@@ -134,7 +131,7 @@ with st.expander("Was ist Rayleigh-Fraktionierung?"):
         """
         <div style="
             background: linear-gradient(180deg, #ffe4f0 0%, #ffd1e6 100%) !important;
-            border: 3px solid #ff69b4 !important;
+            border: 3px solid black !important;
             border-radius: 16px;
             padding: 22px;
             margin: 20px 0;
@@ -158,7 +155,7 @@ with st.expander("Grundlagen"):
         """
         <div style="
             background: linear-gradient(180deg, #ffe4f0 0%, #ffd1e6 100%) !important;
-            border: 3px solid #ff69b4 !important;
+            border: 3px solid black !important;
             border-radius: 16px;
             padding: 22px;
             margin: 20px 0;
@@ -174,7 +171,13 @@ with st.expander("Grundlagen"):
                 <li>Der Fraktionierungsfaktor wird als konstant während des Prozesses angenommen.</li>
             </ul>
             <p style="color: #000000; line-height: 1.6; font-weight: bold;">
-            # Unterstrichener Titel (Deutsch)
+            Formel der Rayleigh-Fraktionierung
+            </p>
+            <p style="color: #000000; line-height: 1.6;">
+            Die Rayleigh-Gleichung beschreibt das Verhältnis der verbleibenden Phase als Funktion des verbleibenden Anteils <strong>f</strong> und des Fraktionierungsfaktors <strong>α</strong>:
+            </p>
+            <p style="color: #000000; line-height: 1.6; font-size: 1.05em;">
+            <strong>R = R₀ × f<sup>α−1</sup></strong>
             </p>
             <p style="color: #000000; line-height: 1.6;">
             Dabei ist <strong>R</strong> das aktuelle Isotopenverhältnis in der verbleibenden Phase, <strong>R₀</strong> das Anfangsverhältnis, <strong>f</strong> der Anteil der verbleibenden Substanz und <strong>α</strong> der Fraktionierungsfaktor.
@@ -207,9 +210,36 @@ with st.expander("Grundlagen"):
         unsafe_allow_html=True,
     )
 
+st.markdown("<div style='height:80px;'></div>", unsafe_allow_html=True)
 
 
 st.header("1. Rayleigh-Verlauf")
+
+st.markdown("### Rayleigh-Fraktionierung: Formeln")
+st.markdown("**Verdunstung**")
+st.markdown("- Isotopenverhältnis der verbleibenden Flüssigkeit:")
+st.latex(r"R_l = R_{l0} \cdot f^{\frac{1}{\alpha}-1}")
+st.markdown("- Isotopenverhältnis des aktuell verdampfenden Gases:")
+st.latex(r"R_v = R_{l0} \cdot \frac{1}{\alpha} \cdot f^{\frac{1}{\alpha}-1}")
+st.markdown("- Isotopenverhältnis des bisher verdampften Gases:")
+st.latex(r"\overline{R_v} = R_{l0} \cdot \frac{1 - f^{1/\alpha}}{1 - f}")
+
+st.markdown("**Kondensation**")
+st.markdown("- Isotopenverhältnis der verbleibenden Gasphase:")
+st.latex(r"R_v = R_{v0} \cdot f^{\alpha-1}")
+st.markdown("- Isotopenverhältnis der aktuell kondensierenden Flüssigkeit:")
+st.latex(r"R_l = R_{v0} \cdot \alpha \cdot f^{\alpha-1}")
+st.markdown("- Isotopenverhältnis der bisher kondensierten Flüssigkeit:")
+st.latex(r"\overline{R_l} = R_{v0} \cdot \frac{1 - f^{\alpha}}{1 - f}")
+
+st.markdown("**Variablen**")
+st.markdown("- $R_{l0}$ = anfängliches Isotopenverhältnis der Flüssigkeit")
+st.markdown("- $R_{v0}$ = anfängliches Isotopenverhältnis der Gasphase")
+st.markdown("- $R_l$ = Isotopenverhältnis der aktuellen Flüssigkeit")
+st.markdown("- $R_v$ = Isotopenverhältnis der aktuellen Gasphase")
+st.markdown("- $\overline{R}$ = mittleres Isotopenverhältnis des bereits gebildeten Produkts")
+st.markdown("- $f$ = verbleibender Anteil der Ausgangsphase")
+st.markdown("- $\alpha$ = Gleichgewichts-Fraktionierungsfaktor")
 
 gnip_examples = {
     "Typisches Regenwasser (GNIP)": -8.5,
@@ -295,9 +325,23 @@ stations = {
         "- Leichte Isotope (^16O) verdampfen leichter.\n"
         "- Dampf wird isotopisch leicht.\n"
         "- Restwasser wird schwerer (höheres δ¹⁸O).\n\n"
+        "### Formeln:\n"
+        "- **Isotopenverhältnis der verbleibenden Flüssigkeit:**\n"
+        "  R_l = R_{l0} \cdot f^{\frac{1}{\alpha}-1}\n"
+        "- **Isotopenverhältnis des momentan verdampfenden Gases:**\n"
+        "  R_v = R_{l0} \cdot \frac{1}{\alpha} \cdot f^{\frac{1}{\alpha}-1}\n"
+        "- **Mittleres Isotopenverhältnis des bereits verdampften Gases:**\n"
+        "  \overline{R_v} = R_{l0} \cdot \frac{1 - f^{1/\alpha}}{1 - f}\n\n"
         "### Ergebnis:\n"
         "- Atmosphäre: leicht (niedrige δ¹⁸O).\n"
         "- Ozean/See: wird schwerer.\n\n"
+        "### Bedeutung der Variablen:\n"
+        "- R_{l0}: anfängliches Isotopenverhältnis der Flüssigkeit.\n"
+        "- R_l: aktuelles Isotopenverhältnis der verbleibenden Flüssigkeit.\n"
+        "- R_v: Isotopenverhältnis des aktuell verdampfenden Gases.\n"
+        "- \overline{R_v}: mittleres Isotopenverhältnis des bereits verdampften Gases.\n"
+        "- f: verbleibender Anteil der Flüssigkeit.\n"
+        "- \alpha: Gleichgewichts-Fraktionierungsfaktor.\n\n"
         "👉 Hier entsteht oft eine Rayleigh-Fraktionierung."
     ),
     "Kondensation": (
@@ -307,9 +351,23 @@ stations = {
         "### Effekt:\n"
         "- Schwere Isotope (^18O) kondensieren zuerst.\n"
         "- Regen wird zunehmend leichter, je weiter die Luftmasse zieht.\n\n"
+        "### Formeln:\n"
+        "- **Isotopenverhältnis der verbleibenden Gasphase:**\n"
+        "  R_v = R_{v0} \cdot f^{\alpha-1}\n"
+        "- **Isotopenverhältnis der aktuell kondensierenden Flüssigkeit:**\n"
+        "  R_l = R_{v0} \cdot \alpha \cdot f^{\alpha-1}\n"
+        "- **Mittleres Isotopenverhältnis der bereits kondensierten Flüssigkeit:**\n"
+        "  \overline{R_l} = R_{v0} \cdot \frac{1 - f^{\alpha}}{1 - f}\n\n"
         "### Ergebnis:\n"
         "- frühe Niederschläge: relativ schwer.\n"
         "- spätere / weiter entfernte: sehr leicht.\n\n"
+        "### Bedeutung der Variablen:\n"
+        "- R_{v0}: anfängliches Isotopenverhältnis der Gasphase.\n"
+        "- R_v: aktuelles Isotopenverhältnis der verbleibenden Gasphase.\n"
+        "- R_l: Isotopenverhältnis der aktuell kondensierenden Flüssigkeit.\n"
+        "- \overline{R_l}: mittleres Isotopenverhältnis der bereits kondensierten Flüssigkeit.\n"
+        "- f: verbleibender Anteil der Gasphase.\n"
+        "- \alpha: Gleichgewichts-Fraktionierungsfaktor.\n\n"
         "👉 Ursache für den latitudinal effect (Pole sind isotopisch leicht)."
     ),
     "Niederschlag": (
