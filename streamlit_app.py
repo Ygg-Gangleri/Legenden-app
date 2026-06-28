@@ -842,3 +842,222 @@ for dv, alt, cc in zip(d_ref, alts_ref, colmap):
 axR.text(min(d_ref) - 1, -200, 'B', weight='bold')
 
 st.pyplot(fig4)
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+
+st.header("📈 Interactive Rayleigh Fractionation")
+
+st.write("""
+Explore how the isotopic composition changes during Rayleigh fractionation.
+Adjust the initial isotope value, the fractionation factor, and the remaining fraction.
+""")
+
+# -----------------------------
+# Sidebar / Slider
+# -----------------------------
+delta0 = st.slider(
+    "Initial δ18O value (‰)",
+    min_value=-25.0,
+    max_value=5.0,
+    value=0.0,
+    step=0.5
+)
+
+alpha = st.slider(
+    "Fractionation factor α",
+    min_value=1.000,
+    max_value=1.020,
+    value=1.009,
+    step=0.001,
+    format="%.3f"
+)
+
+f_current = st.slider(
+    "Remaining fraction (f)",
+    min_value=0.01,
+    max_value=1.00,
+    value=0.50,
+    step=0.01
+)
+
+# -----------------------------
+# Rayleigh calculation
+# -----------------------------
+f = np.linspace(0.01, 1, 200)
+
+delta = (delta0 + 1000) * (f ** (alpha - 1)) - 1000
+
+delta_current = (delta0 + 1000) * (f_current ** (alpha - 1)) - 1000
+
+# -----------------------------
+# Plot
+# -----------------------------
+fig, ax = plt.subplots(figsize=(8,5))
+
+ax.plot(f, delta, linewidth=2, label="Rayleigh Curve")
+
+ax.scatter(
+    f_current,
+    delta_current,
+    color="red",
+    s=80,
+    label="Selected Point"
+)
+
+ax.set_xlabel("Remaining fraction (f)")
+ax.set_ylabel("δ18O (‰)")
+ax.set_title("Rayleigh Isotope Fractionation")
+
+ax.grid(True)
+
+ax.legend()
+
+st.pyplot(fig)
+
+# -----------------------------
+# Display values
+# -----------------------------
+st.subheader("Current values")
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Initial δ18O", f"{delta0:.2f} ‰")
+col2.metric("Remaining fraction", f"{f_current:.2f}")
+col3.metric("Calculated δ18O", f"{delta_current:.2f} ‰")
+
+st.info(
+"""
+**Interpretation**
+
+- When the remaining fraction (**f**) decreases, the remaining water becomes progressively isotopically enriched.
+- The fractionation factor (**α**) controls how strongly the isotope composition changes.
+- The red point represents the currently selected state.
+"""
+)
+import streamlit as st
+
+st.header("🌍 Interactive Hydrological Cycle")
+
+st.write("Click on a reservoir to learn how isotope fractionation changes during the water cycle.")
+
+# ------------------------------------
+# Session State
+# ------------------------------------
+
+if "selected" not in st.session_state:
+    st.session_state.selected = "Ocean"
+
+# ------------------------------------
+# Buttons
+# ------------------------------------
+
+col1, col2, col3 = st.columns([1,2,1])
+
+with col2:
+
+    if st.button("☁️ Atmosphere"):
+        st.session_state.selected = "Atmosphere"
+
+    if st.button("🌧 Precipitation"):
+        st.session_state.selected = "Precipitation"
+
+    if st.button("🏔 Infiltration"):
+        st.session_state.selected = "Infiltration"
+
+    if st.button("💧 Groundwater"):
+        st.session_state.selected = "Groundwater"
+
+    if st.button("🏞 Runoff"):
+        st.session_state.selected = "Runoff"
+
+    if st.button("🌊 Ocean"):
+        st.session_state.selected = "Ocean"
+
+    if st.button("☀️ Evaporation"):
+        st.session_state.selected = "Evaporation"
+
+# ------------------------------------
+# Information
+# ------------------------------------
+
+st.divider()
+
+reservoir = st.session_state.selected
+
+if reservoir == "Ocean":
+
+    st.subheader("🌊 Ocean")
+
+    st.write("""
+The ocean is the largest water reservoir on Earth.
+
+Typical isotope composition:
+
+- δ18O ≈ 0 ‰ (SMOW)
+- Source for evaporation
+- Heavy isotopes remain preferentially in the liquid
+""")
+
+elif reservoir == "Evaporation":
+
+    st.subheader("☀️ Evaporation")
+
+    st.write("""
+During evaporation the lighter isotope (16O) enters the vapor phase more easily.
+
+The remaining ocean water becomes relatively enriched in 18O.
+""")
+
+elif reservoir == "Atmosphere":
+
+    st.subheader("☁️ Atmosphere")
+
+    st.write("""
+Water vapor is depleted in heavy isotopes compared to seawater.
+
+Its isotope composition changes during transport.
+""")
+
+elif reservoir == "Precipitation":
+
+    st.subheader("🌧 Precipitation")
+
+    st.write("""
+Rain removes heavy isotopes first.
+
+Remaining vapor becomes progressively depleted following Rayleigh fractionation.
+""")
+
+elif reservoir == "Infiltration":
+
+    st.subheader("🏔 Infiltration")
+
+    st.write("""
+Rainwater infiltrates into the soil.
+
+The isotope signal is often preserved in groundwater.
+""")
+
+elif reservoir == "Groundwater":
+
+    st.subheader("💧 Groundwater")
+
+    st.write("""
+Groundwater stores the isotopic signature of recharge.
+
+These data are widely used in hydrogeology.
+""")
+
+elif reservoir == "Runoff":
+
+    st.subheader("🏞 Runoff")
+
+    st.write("""
+Surface runoff transports water back into rivers and finally the ocean.
+
+Depending on climate, isotope values may vary seasonally.
+""")
+with st.expander("📐 Show Rayleigh equations"):
+    st.latex(r"R_l = R_{l0}f^{1/\alpha-1}")
+    st.latex(r"R_v = R_{l0}\frac{1}{\alpha}f^{1/\alpha-1}")
