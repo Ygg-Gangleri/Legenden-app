@@ -218,11 +218,11 @@ st.header("1. Rayleigh-Verlauf")
 st.markdown("### Rayleigh-Fraktionierung: Formeln")
 st.markdown("**Verdunstung**")
 st.markdown("- Isotopenverhältnis der verbleibenden Flüssigkeit:")
-st.latex(r"R_l = R_{l0} \cdot f^{\frac{1}{\alpha}-1}")
+st.latex(r"R_l = R_{l0} \cdot f^{\alpha - 1}")
 st.markdown("- Isotopenverhältnis des aktuell verdampfenden Gases:")
-st.latex(r"R_v = R_{l0} \cdot \frac{1}{\alpha} \cdot f^{\frac{1}{\alpha}-1}")
+st.latex(r"R_v = \alpha \cdot R_l = \alpha \cdot R_{l0} \cdot f^{\alpha - 1}")
 st.markdown("- Isotopenverhältnis des bisher verdampften Gases:")
-st.latex(r"\overline{R_v} = R_{l0} \cdot \frac{1 - f^{1/\alpha}}{1 - f}")
+st.latex(r"\overline{R_v} = R_{l0} \cdot \frac{1 - f^{\alpha}}{1 - f}")
 
 st.markdown("**Kondensation**")
 st.markdown("- Isotopenverhältnis der verbleibenden Gasphase:")
@@ -327,11 +327,11 @@ stations = {
         "- Restwasser wird schwerer (höheres δ¹⁸O).\n\n"
         "### Formeln:\n"
         "- **Isotopenverhältnis der verbleibenden Flüssigkeit:**\n"
-        "  R_l = R_{l0} \cdot f^{\frac{1}{\alpha}-1}\n"
+        "  R_l = R_{l0} \cdot f^{\alpha - 1}\n"
         "- **Isotopenverhältnis des momentan verdampfenden Gases:**\n"
-        "  R_v = R_{l0} \cdot \frac{1}{\alpha} \cdot f^{\frac{1}{\alpha}-1}\n"
+        "  R_v = α \cdot R_l = α \cdot R_{l0} \cdot f^{\alpha - 1}\n"
         "- **Mittleres Isotopenverhältnis des bereits verdampften Gases:**\n"
-        "  \overline{R_v} = R_{l0} \cdot \frac{1 - f^{1/\alpha}}{1 - f}\n\n"
+        "  \overline{R_v} = R_{l0} \cdot \frac{1 - f^{\alpha}}{1 - f}\n\n"
         "### Ergebnis:\n"
         "- Atmosphäre: leicht (niedrige δ¹⁸O).\n"
         "- Ozean/See: wird schwerer.\n\n"
@@ -427,225 +427,125 @@ stations = {
 
 selected_station = st.radio("Station wählen", list(stations.keys()), index=0, horizontal=True)
 
-fig2, ax2 = plt.subplots(figsize=(6, 6))
-ax2.set_xlim(-1.6, 1.6)
-ax2.set_ylim(-1.6, 1.6)
-ax2.axis("off")
-
-positions = {
-    "Verdunstung": (-1.2, 0.5),
-    "Kondensation": (0, 1.3),
-    "Niederschlag": (1.2, 0.5),
-    "Abfluss / Sammlung": (1.3, -0.4),
-    "Grundwasser": (0, -1.3),
-    "Versickerung": (-1.3, -0.4),
-}
-
-for name, (x, y) in positions.items():
-    selected = name == selected_station
-    color = "#ff7f0e" if selected else "#1f77b4"
-    label = name.replace(" / ", "\n/ ")
-    ax2.text(
-        x,
-        y,
-        label,
-        ha="center",
-        va="center",
-        fontsize=9,
-        weight="bold",
-        color="black",
-        bbox={
-            "boxstyle": "round,pad=0.45",
-            "facecolor": color,
-            "edgecolor": "k",
-            "linewidth": 1,
-            "alpha": 0.95,
-        },
+st.subheader(selected_station)
+if selected_station == "Daten-Upload":
+    st.write(stations[selected_station])
+    st.markdown(
+        "Lade eine Datei mit δ¹⁸O-Werten hoch. Erlaubte Formate: CSV, XLSX, XLS."
+    )
+    isotope_file = st.file_uploader(
+        "δ¹⁸O Datei hochladen", type=["csv", "xlsx", "xls"]
     )
 
-delta_labels = {
-    ("Verdunstung", "Kondensation"): "δ¹⁸O: -5‰ → -8‰",
-    ("Kondensation", "Niederschlag"): "δ¹⁸O: -8‰ → -10‰",
-    ("Niederschlag", "Abfluss / Sammlung"): "δ¹⁸O: -10‰ → -12‰",
-    ("Abfluss / Sammlung", "Versickerung"): "δ¹⁸O: -12‰ → -14‰",
-    ("Versickerung", "Grundwasser"): "δ¹⁸O: -14‰ → -13‰",
-    ("Grundwasser", "Verdunstung"): "δ¹⁸O: -13‰ → -5‰",
-}
-paths = [
-    ("Verdunstung", "Kondensation"),
-    ("Kondensation", "Niederschlag"),
-    ("Niederschlag", "Abfluss / Sammlung"),
-    ("Abfluss / Sammlung", "Versickerung"),
-    ("Versickerung", "Grundwasser"),
-    ("Grundwasser", "Verdunstung"),
-]
-curve_rads = {
-    ("Grundwasser", "Verdunstung"): 0.3,
-    ("Abfluss / Sammlung", "Versickerung"): -0.2,
-    ("Verdunstung", "Kondensation"): 0.0,
-    ("Kondensation", "Niederschlag"): 0.0,
-    ("Niederschlag", "Abfluss / Sammlung"): 0.0,
-    ("Versickerung", "Grundwasser"): 0.0,
-}
-box_radius = 0.25
-for src, dst in paths:
-    x0, y0 = positions[src]
-    x1, y1 = positions[dst]
-    rad = curve_rads.get((src, dst), 0.0)
+    if isotope_file is not None:
+        try:
+            if isotope_file.name.lower().endswith((".xls", ".xlsx")):
+                df = pd.read_excel(isotope_file)
+            else:
+                df = pd.read_csv(isotope_file)
 
-    dx = x1 - x0
-    dy = y1 - y0
-    dist = np.hypot(dx, dy)
-    start_x = x0 + (dx / dist) * box_radius
-    start_y = y0 + (dy / dist) * box_radius
-    end_x = x1 - (dx / dist) * box_radius
-    end_y = y1 - (dy / dist) * box_radius
-
-    ax2.annotate(
-        "",
-        xy=(end_x, end_y),
-        xytext=(start_x, start_y),
-        arrowprops={
-            "arrowstyle": "-|>",
-            "color": "#444444",
-            "linewidth": 2.4,
-            "shrinkA": 0,
-            "shrinkB": 0,
-            "mutation_scale": 20,
-            "connectionstyle": f"arc3,rad={rad}",
-        },
-    )
-    mid_x = start_x + (end_x - start_x) * 0.5
-    mid_y = start_y + (end_y - start_y) * 0.5
-    label = delta_labels.get((src, dst), "")
-    if label:
-        ax2.text(mid_x, mid_y, label, ha="center", va="center", fontsize=8, color="#333333", bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "alpha": 0.8, "edgecolor": "none"})
-
-ax2.set_title("Tirel Wasserkreislauf")
-
-col3, col4 = st.columns([1, 1])
-with col3:
-    st.pyplot(fig2)
-with col4:
-    st.subheader(selected_station)
-    if selected_station == "Daten-Upload":
-        st.write(stations[selected_station])
-        st.markdown(
-            "Lade eine Datei mit δ¹⁸O-Werten hoch. Erlaubte Formate: CSV, XLSX, XLS."
-        )
-        isotope_file = st.file_uploader(
-            "δ¹⁸O Datei hochladen", type=["csv", "xlsx", "xls"]
-        )
-
-        if isotope_file is not None:
-            try:
-                if isotope_file.name.lower().endswith((".xls", ".xlsx")):
-                    df = pd.read_excel(isotope_file)
-                else:
-                    df = pd.read_csv(isotope_file)
-
+            candidate_columns = [
+                c
+                for c in df.columns
+                if c.lower().replace(" ", "").replace("_", "")
+                in (
+                    "d18o",
+                    "delta18o",
+                    "delta_18o",
+                    "delta18",
+                    "δ18o",
+                    "d18",
+                )
+                and pd.api.types.is_numeric_dtype(df[c])
+            ]
+            if not candidate_columns:
                 candidate_columns = [
                     c
                     for c in df.columns
-                    if c.lower().replace(" ", "").replace("_", "")
-                    in (
-                        "d18o",
-                        "delta18o",
-                        "delta_18o",
-                        "delta18",
-                        "δ18o",
-                        "d18",
+                    if any(
+                        key in c.lower()
+                        for key in ["18o", "d18o", "delta", "δ18"]
                     )
                     and pd.api.types.is_numeric_dtype(df[c])
                 ]
-                if not candidate_columns:
-                    candidate_columns = [
-                        c
-                        for c in df.columns
-                        if any(
-                            key in c.lower()
-                            for key in ["18o", "d18o", "delta", "δ18"]
-                        )
-                        and pd.api.types.is_numeric_dtype(df[c])
-                    ]
-                if not candidate_columns:
-                    candidate_columns = [
-                        c
-                        for c in df.columns
-                        if pd.api.types.is_numeric_dtype(df[c])
-                    ]
+            if not candidate_columns:
+                candidate_columns = [
+                    c
+                    for c in df.columns
+                    if pd.api.types.is_numeric_dtype(df[c])
+                ]
 
-                if not candidate_columns:
-                    st.warning(
-                        "In der Datei wurden keine numerischen Spalten gefunden. Bitte lade eine Datei mit δ¹⁸O-Werten hoch."
+            if not candidate_columns:
+                st.warning(
+                    "In der Datei wurden keine numerischen Spalten gefunden. Bitte lade eine Datei mit δ¹⁸O-Werten hoch."
+                )
+            else:
+                delta_col = st.selectbox(
+                    "Wähle die δ¹⁸O-Spalte", candidate_columns, index=0
+                )
+
+                axis_columns = [
+                    c
+                    for c in df.columns
+                    if c != delta_col
+                    and (
+                        pd.api.types.is_numeric_dtype(df[c])
+                        or pd.api.types.is_datetime64_any_dtype(df[c])
+                        or df[c].dtype == object
+                    )
+                ]
+                x_axis_choice = st.selectbox(
+                    "Wähle X-Achse", ["Index"] + axis_columns, index=0
+                )
+
+                if x_axis_choice == "Index":
+                    x_values = np.arange(1, len(df) + 1)
+                    x_label = "Probe"
+                else:
+                    x_values = df[x_axis_choice]
+                    x_label = x_axis_choice
+
+                y_values = pd.to_numeric(df[delta_col], errors="coerce")
+                valid = ~y_values.isna()
+                y_values = y_values[valid]
+                x_values = x_values[valid]
+
+                st.metric("Anzahl auswertbarer Werte", f"{len(y_values)}")
+                st.write(
+                    {
+                        "Mittelwert (δ¹⁸O)": f"{y_values.mean():.2f} ‰",
+                        "Median (δ¹⁸O)": f"{y_values.median():.2f} ‰",
+                        "Minimum (δ¹⁸O)": f"{y_values.min():.2f} ‰",
+                        "Maximum (δ¹⁸O)": f"{y_values.max():.2f} ‰",
+                    }
+                )
+
+                fig_upload, ax_upload = plt.subplots(figsize=(6, 4))
+                ax_upload.plot(x_values, y_values, marker="o", color="#1f77b4", linewidth=2)
+                ax_upload.set_xlabel(x_label, color="black")
+                ax_upload.set_ylabel("δ¹⁸O (‰)", color="black")
+                ax_upload.set_title("Hochgeladene δ¹⁸O Werte", color="black")
+                ax_upload.grid(alpha=0.3)
+                ax_upload.tick_params(colors="black")
+                st.pyplot(fig_upload)
+
+                if x_axis_choice == "Index":
+                    st.caption(
+                        "Die Werte werden gegen die Probennummer aufgetragen."
                     )
                 else:
-                    delta_col = st.selectbox(
-                        "Wähle die δ¹⁸O-Spalte", candidate_columns, index=0
+                    st.caption(
+                        "Die Werte werden gegen die gewählte X-Achse aufgetragen."
                     )
-
-                    axis_columns = [
-                        c
-                        for c in df.columns
-                        if c != delta_col
-                        and (
-                            pd.api.types.is_numeric_dtype(df[c])
-                            or pd.api.types.is_datetime64_any_dtype(df[c])
-                            or df[c].dtype == object
-                        )
-                    ]
-                    x_axis_choice = st.selectbox(
-                        "Wähle X-Achse", ["Index"] + axis_columns, index=0
-                    )
-
-                    if x_axis_choice == "Index":
-                        x_values = np.arange(1, len(df) + 1)
-                        x_label = "Probe"
-                    else:
-                        x_values = df[x_axis_choice]
-                        x_label = x_axis_choice
-
-                    y_values = pd.to_numeric(df[delta_col], errors="coerce")
-                    valid = ~y_values.isna()
-                    y_values = y_values[valid]
-                    x_values = x_values[valid]
-
-                    st.metric("Anzahl auswertbarer Werte", f"{len(y_values)}")
-                    st.write(
-                        {
-                            "Mittelwert (δ¹⁸O)": f"{y_values.mean():.2f} ‰",
-                            "Median (δ¹⁸O)": f"{y_values.median():.2f} ‰",
-                            "Minimum (δ¹⁸O)": f"{y_values.min():.2f} ‰",
-                            "Maximum (δ¹⁸O)": f"{y_values.max():.2f} ‰",
-                        }
-                    )
-
-                    fig_upload, ax_upload = plt.subplots(figsize=(6, 4))
-                    ax_upload.plot(x_values, y_values, marker="o", color="#1f77b4", linewidth=2)
-                    ax_upload.set_xlabel(x_label, color="black")
-                    ax_upload.set_ylabel("δ¹⁸O (‰)", color="black")
-                    ax_upload.set_title("Hochgeladene δ¹⁸O Werte", color="black")
-                    ax_upload.grid(alpha=0.3)
-                    ax_upload.tick_params(colors="black")
-                    st.pyplot(fig_upload)
-
-                    if x_axis_choice == "Index":
-                        st.caption(
-                            "Die Werte werden gegen die Probennummer aufgetragen."
-                        )
-                    else:
-                        st.caption(
-                            "Die Werte werden gegen die gewählte X-Achse aufgetragen."
-                        )
-            except Exception as e:
-                st.error(f"Fehler beim Einlesen der Datei: {e}")
-        else:
-            st.info(
-                "Lade eine CSV- oder Excel-Datei hoch, die δ¹⁸O-Werte enthält."
-            )
+        except Exception as e:
+            st.error(f"Fehler beim Einlesen der Datei: {e}")
     else:
-        st.write(stations[selected_station])
-        st.info("Klicke eine Station an, um den erklärenden Text dazu zu sehen.")
+        st.info(
+            "Lade eine CSV- oder Excel-Datei hoch, die δ¹⁸O-Werte enthält."
+        )
+else:
+    st.write(stations[selected_station])
+    st.info("Klicke eine Station an, um den erklärenden Text dazu zu sehen.")
 
 st.header("3. Schematische Darstellung: Wolken, Ozean, Land, Berge")
 st.write("Erzeugt eine zweigeteilte Abbildung: oben ein schematisches Panel, unten ein δ¹⁸O vs. Höhe Plot (wie im Referenzbild).")
@@ -1059,5 +959,5 @@ Surface runoff transports water back into rivers and finally the ocean.
 Depending on climate, isotope values may vary seasonally.
 """)
 with st.expander("📐 Show Rayleigh equations"):
-    st.latex(r"R_l = R_{l0}f^{1/\alpha-1}")
-    st.latex(r"R_v = R_{l0}\frac{1}{\alpha}f^{1/\alpha-1}")
+    st.latex(r"R_l = R_{l0}f^{\alpha-1}")
+    st.latex(r"R_v = \alpha R_{l0}f^{\alpha-1}")
