@@ -183,25 +183,6 @@ with st.expander("Grundlagen"):
             Dabei ist <strong>R</strong> das aktuelle Isotopenverhältnis in der verbleibenden Phase, <strong>R₀</strong> das Anfangsverhältnis, <strong>f</strong> der Anteil der verbleibenden Substanz und <strong>α</strong> der Fraktionierungsfaktor.
             </p>
             <p style="color: #000000; line-height: 1.6; font-weight: bold;">
-            Mathematische Berechnung:
-            </p>
-            <ul style="color: #000000; line-height: 1.6; margin-top: 8px;">
-                <li><strong>Schritt 1:</strong> Berechne den Exponenten: <strong>α − 1</strong></li>
-                <li><strong>Schritt 2:</strong> Erhebe <strong>f</strong> (den verbleibenden Anteil) zur Potenz (α − 1): <strong>f<sup>α−1</sup></strong></li>
-                <li><strong>Schritt 3:</strong> Multipliziere mit dem Anfangsverhältnis: <strong>R = R₀ × f<sup>α−1</sup></strong></li>
-            </ul>
-            <p style="color: #000000; line-height: 1.6; font-weight: bold;">
-            Beispiel Berechnung:
-            </p>
-            <p style="color: #000000; line-height: 1.6;">
-            Mit R₀ = 0,002 (Anfangswert), α = 1,005 und f = 0,5 (50% verbleibend):
-            </p>
-            <ul style="color: #000000; line-height: 1.6; margin-top: 8px;">
-                <li>α − 1 = 1,005 − 1 = 0,005</li>
-                <li>f<sup>α−1</sup> = 0,5<sup>0,005</sup> ≈ 0,9965</li>
-                <li>R = 0,002 × 0,9965 ≈ 0,001993</li>
-            </ul>
-            <p style="color: #000000; line-height: 1.6; font-weight: bold;">
             &#128161; Zum Merken!<br>
             Je mehr Material entfernt wird, desto stärker verändert sich die isotopische Zusammensetzung der verbleibenden Phase.
             </p>
@@ -250,10 +231,11 @@ gnip_examples = {
 
 col1, col2 = st.columns([2, 1])
 with col2:
-    selected_precip = st.selectbox(
+    selected_precip = st.radio(
         "Beispiel aus GNIP-Niederschlagdaten wählen",
         list(gnip_examples.keys()),
         index=0,
+        horizontal=False,
     )
     delta0_default = gnip_examples[selected_precip]
     delta0 = st.slider("Anfangswert δ₀ (‰)", -25.0, 0.0, delta0_default, step=0.5)
@@ -272,24 +254,60 @@ with col2:
     )
 
 with col1:
-    f = np.linspace(0.01, 1.0, 200)
-    delta = (delta0 + 1000) * f ** (alpha - 1) - 1000
+    st.markdown("### Interaktive Rayleigh-Fraktionierung")
+    st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
-    fig, ax = plt.subplots(figsize=(5, 3))
-    ax.plot(f, delta, color="#1f77b4", linewidth=2)
+    f = np.linspace(0.01, 1.0, 200)
+
+    st.markdown("**Kurven auswählen:**")
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        show_rv_cond = st.checkbox("Isotopenverhältnis der verbleibenden Gasphase", value=True, key="show_rv_cond")
+    with col_b:
+        show_rl_cond = st.checkbox("Isotopenverhältnis der aktuell kondensierenden Flüssigkeit", value=True, key="show_rl_cond")
+    with col_c:
+        show_rl_mean_cond = st.checkbox("Isotopenverhältnis der bisher kondensierten Flüssigkeit", value=True, key="show_rl_mean_cond")
+
+    fig, ax = plt.subplots(figsize=(11.5, 6.2))
+    fig.subplots_adjust(right=0.68)
     ax.axvline(f_wert, color="#ff7f0e", linestyle="--", label=f"Aktueller Anteil f={f_wert:.2f}")
+
+    rv0 = (delta0 + 1000) / 1000.0
+    rv = rv0 * f ** (alpha - 1)
+    rl = rv0 * alpha * f ** (alpha - 1)
+    rl_mean = np.empty_like(f)
+    rl_mean[:] = np.nan
+    mask = f < 1.0
+    rl_mean[mask] = rv0 * (1 - f[mask] ** alpha) / (1 - f[mask])
+    rl_mean[~mask] = rv0 * alpha
+
+    if show_rv_cond:
+        ax.plot(f, rv, color="#2ecc71", linestyle="--", linewidth=2.0, label=r"$R_v$")
+    if show_rl_cond:
+        ax.plot(f, rl, color="#e74c3c", linestyle="--", linewidth=2.0, label=r"$R_l$")
+    if show_rl_mean_cond:
+        ax.plot(f, rl_mean, color="#9b59b6", linestyle="--", linewidth=2.0, label=r"$\overline{R_l}$")
+
     ax.set_xlabel("Verbleibender Anteil f", color="black")
-    ax.set_ylabel("δ (‰)", color="black")
+    ax.set_ylabel("Rayleigh-R-Werte", color="black")
     ax.set_title("Rayleigh-Isotopenverlauf", color="black")
-    ax.set_ylim(-40, 10)
+    y_values = [rv, rl, rl_mean]
+    y_values = [y[~np.isnan(y)] for y in y_values]
+    if y_values:
+        y_min = min(np.min(y) for y in y_values)
+        y_max = max(np.max(y) for y in y_values)
+        ax.set_ylim(y_min * 0.98, y_max * 1.02)
     ax.tick_params(colors="black")
     ax.grid(alpha=0.3)
-    legend = ax.legend()
+
+    legend = ax.legend(loc="center left", bbox_to_anchor=(1.08, 0.5))
     for text in legend.get_texts():
         text.set_color("black")
     legend.get_frame().set_facecolor("white")
     legend.get_frame().set_edgecolor("black")
     st.pyplot(fig)
+
+st.markdown("<div style='height:48px;'></div>", unsafe_allow_html=True)
 
 st.markdown(
     "### 1.2 Erklärung der Rayleigh-Parameter\n"
